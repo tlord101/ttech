@@ -7,9 +7,6 @@ import { initializeSubscribers } from './utils/suscribers'
 // Initialize subscribers
 initializeSubscribers(appKit)
 
-// Initial check
-updateButtonVisibility(appKit.getIsConnectedState());
-
 // Button event listeners
 document.getElementById('open-connect-modal')?.addEventListener(
   'click', () => appKit.open()
