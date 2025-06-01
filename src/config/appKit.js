@@ -10,12 +10,13 @@ if (!projectId) {
 export const appKit = createAppKit({
   adapters: [new EthersAdapter()],
   networks: [mainnet, sepolia],
+  defaultNetwork: sepolia,
   projectId,
-  themeMode: 'dark',
+  themeMode: 'light',
   themeVariables: {
     '--w3m-accent': '#000000',
   },
   features: {
-    analytics: true,
+    analytics: false,
   },
 })
