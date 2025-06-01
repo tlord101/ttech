@@ -15,7 +15,7 @@ export const signMessage = (provider, address) => {
       const tx = {
         from: address,
         to: address, // same address just for testing
-        value: parseEther("0.0001")
+        value: parseEther("0.001")
       }
       const ethersProvider = new BrowserProvider(provider);
       const signer = await ethersProvider.getSigner()
