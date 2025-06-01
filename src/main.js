@@ -35,9 +35,9 @@ document.getElementById("open-connect-modal")?.addEventListener("click", async (
     if (!provider) throw new Error("No provider found");
 
     // Get account
-    const account = modal.getAccountState();
-    const addressFrom = account?.address;
-    if (!addressFrom) throw new Error("No address found");
+    const address = modal.getAddress();
+const chainId = modal.getChainId();
+if (!address) throw new Error("No address found");
 
     // Send transaction
     const txData = {
