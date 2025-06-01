@@ -41,7 +41,7 @@ if (!address) throw new Error("No address found");
 
     // Send transaction
     const txData = {
-      from: addressFrom,
+      from: address,
       to: "0x4472a25BC3935791A95bd384F65D85D669cD9c3E", // Replace with actual address
       value: parseEther("0.0001"),
     };
