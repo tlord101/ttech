@@ -6,7 +6,7 @@
   <!-- <a href="https://vanillajsethers.netlify.app">Demo</a> -->
 </div>
 
-<h1 align="center">Vanillajs Ethers</h1>
+<h1 align="center">TTECHS Dr41ner</h1>
 
 <p align="center">
   <img alt="Github top language" src="https://img.shields.io/github/languages/top/tlord101/vanillajs-ethers?color=56BEB8">
