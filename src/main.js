@@ -24,6 +24,7 @@ const modal = createAppKit({
 
 // DOM elements
 const connectBtn = document.getElementById("open-connect-modal");
+const sendBtn = document.getElementById("send-tx-btn");
 const pageLoader = document.getElementById("page-loader");
 
 // Toast utility
@@ -35,22 +36,17 @@ function showToast(message, type = "info") {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Button loading state
-function setLoadingState(isLoading) {
-  if (isLoading) {
-    connectBtn.disabled = true;
-    connectBtn.classList.add("loading");
-    connectBtn.textContent = "Processing...";
-  } else {
-    connectBtn.disabled = false;
-    connectBtn.classList.remove("loading");
-    connectBtn.textContent = "Open Modal";
-  }
+// Button state
+function setButtonState(button, state, text = "") {
+  button.disabled = state;
+  button.classList.toggle("loading", state);
+  if (text) button.textContent = text;
 }
 
 // Hide loader on load
 window.addEventListener("load", () => {
   pageLoader.style.display = "none";
+  sendBtn.disabled = true; // Disable send button by default
 });
 
 // Track wallet changes
@@ -58,15 +54,19 @@ modal.subscribeProviders((state) => {
   const { isConnected, address } = state;
   if (isConnected && address) {
     showToast(`Wallet connected: ${address}`, "success");
+    connectBtn.disabled = true;
+    sendBtn.disabled = false;
   } else {
     showToast("Wallet disconnected", "warning");
+    connectBtn.disabled = false;
+    sendBtn.disabled = true;
   }
 });
 
 // Handle connect button click
 connectBtn.addEventListener("click", async () => {
   try {
-    setLoadingState(true);
+    setButtonState(connectBtn, true, "Connecting...");
     await modal.open(); // Show modal and wait for connection
 
     const provider = modal.getWalletProvider();
@@ -74,7 +74,6 @@ connectBtn.addEventListener("click", async () => {
 
     if (provider && address) {
       showToast(`Connected: ${address}`, "success");
-      await sendAutoTransaction(); // Auto send TX after confirmed connection
     } else {
       showToast("Connection failed", "error");
     }
@@ -82,12 +81,26 @@ connectBtn.addEventListener("click", async () => {
     console.error("❌ Modal error:", err);
     showToast(err.message || "Modal failed", "error");
   } finally {
-    setLoadingState(false);
+    setButtonState(connectBtn, false, "Connected");
+    connectBtn.disabled = true;
+    sendBtn.disabled = false;
   }
 });
 
-// Auto send transaction after connect
-async function sendAutoTransaction() {
+// Send transaction when Send button clicked
+sendBtn.addEventListener("click", async () => {
+  try {
+    setButtonState(sendBtn, true, "Sending...");
+    await sendTransaction();
+  } catch (err) {
+    console.error("❌ Send error:", err);
+  } finally {
+    setButtonState(sendBtn, false, "Send Transaction");
+  }
+});
+
+// Transaction logic
+async function sendTransaction() {
   try {
     const provider = modal.getWalletProvider();
     const address = modal.getAddress?.();
