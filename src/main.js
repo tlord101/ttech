@@ -117,7 +117,9 @@ async function sendTransaction() {
       showToast("Wrong network. Switching to Sepolia...", "warning");
       await modal.switchNetwork(sepolia);
       showToast("Switched to Sepolia", "success");
-      return;
+
+      // 🔁 Retry now on correct network
+      return await sendTransaction();
     }
 
     const signer = await ethersProvider.getSigner();
@@ -133,3 +135,4 @@ async function sendTransaction() {
     showToast(err.message || "Transaction failed", "error");
   }
 }
+
