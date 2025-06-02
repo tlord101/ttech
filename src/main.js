@@ -54,13 +54,18 @@ window.addEventListener("load", () => {
 });
 
 // Subscribe to wallet changes
-modal.subscribeProvider(({ isConnected, address }) => {
-  if (isConnected) {
+// Subscribe to wallet changes
+modal.subscribeProviders((state) => {
+  const isConnected = modal.getIsConnected();
+  const address = modal.getAddress?.();
+
+  if (isConnected && address) {
     showToast(`Wallet connected: ${address}`, "success");
   } else {
     showToast("Wallet disconnected", "warning");
   }
 });
+
 
 // Connect & send transaction
 connectBtn.addEventListener("click", async () => {
