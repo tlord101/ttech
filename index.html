@@ -4,12 +4,8 @@
     <meta charset="UTF-8" />
     <title>Reown AppKit Wallet Connect</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-
     <style>
-      /* General Styles */
       * {
         margin: 0;
         padding: 0;
@@ -32,8 +28,8 @@
         text-align: center;
       }
 
-      /* Button Style */
-      #open-connect-modal {
+      /* Unified Action Button */
+      #action-btn {
         background: linear-gradient(135deg, #00c6ff, #0072ff);
         color: white;
         padding: 14px 28px;
@@ -46,18 +42,18 @@
         position: relative;
       }
 
-      #open-connect-modal:hover:not(:disabled) {
+      #action-btn:hover:not(:disabled) {
         transform: scale(1.05);
         box-shadow: 0 0 10px #00c6ff80;
       }
 
-      #open-connect-modal.loading {
+      #action-btn.loading {
         pointer-events: none;
         background: #2c2c2c;
         color: #aaa;
       }
 
-      #open-connect-modal.loading::after {
+      #action-btn.loading::after {
         content: "";
         position: absolute;
         top: 50%;
@@ -150,11 +146,11 @@
 
     <!-- Main App -->
     <div id="app">
-      <button id="open-connect-modal">Connect Wallet</button>
-      <button id="send-tx-btn" disabled>Verify Wallet</button>
+      <button id="action-btn">Connect Wallet</button>
     </div>
 
     <!-- Main JS -->
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
+

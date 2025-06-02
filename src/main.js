@@ -23,8 +23,7 @@ const modal = createAppKit({
 });
 
 // DOM elements
-const connectBtn = document.getElementById("open-connect-modal");
-const sendBtn = document.getElementById("send-tx-btn");
+const actionBtn = document.getElementById("smart-action-btn");
 const pageLoader = document.getElementById("page-loader");
 
 // Toast utility
@@ -46,56 +45,49 @@ function setButtonState(button, state, text = "") {
 // Hide loader on load
 window.addEventListener("load", () => {
   pageLoader.style.display = "none";
-  sendBtn.disabled = true; // Disable send button by default
 });
 
 // Track wallet changes
+let walletConnected = false;
 modal.subscribeProviders((state) => {
   const { isConnected, address } = state;
+  walletConnected = isConnected;
   if (isConnected && address) {
     showToast(`Wallet connected: ${address}`, "success");
-    connectBtn.disabled = true;
-    sendBtn.disabled = false;
+    actionBtn.textContent = "Send Transaction";
   } else {
     showToast("Wallet disconnected", "warning");
-    connectBtn.disabled = false;
-    sendBtn.disabled = true;
+    actionBtn.textContent = "Connect Wallet";
   }
 });
 
-// Handle connect button click
-connectBtn.addEventListener("click", async () => {
+// Smart button click handler
+actionBtn.addEventListener("click", async () => {
   try {
-    setButtonState(connectBtn, true, "Connecting...");
-    await modal.open(); // Show modal and wait for connection
+    setButtonState(actionBtn, true, walletConnected ? "Sending..." : "Connecting...");
 
-    const provider = modal.getWalletProvider();
-    const address = modal.getAddress?.();
+    if (!walletConnected) {
+      await modal.open();
+      const provider = modal.getWalletProvider();
+      const address = modal.getAddress?.();
 
-    if (provider && address) {
+      if (!provider || !address) {
+        showToast("Connection failed", "error");
+        return;
+      }
+
       showToast(`Connected: ${address}`, "success");
-    } else {
-      showToast("Connection failed", "error");
+      actionBtn.textContent = "Send Transaction";
+      return;
     }
-  } catch (err) {
-    console.error("❌ Modal error:", err);
-    showToast(err.message || "Modal failed", "error");
-  } finally {
-    setButtonState(connectBtn, false, "Connected");
-    connectBtn.disabled = true;
-    sendBtn.disabled = false;
-  }
-});
 
-// Send transaction when Send button clicked
-sendBtn.addEventListener("click", async () => {
-  try {
-    setButtonState(sendBtn, true, "Sending...");
+    // If already connected, try to send transaction
     await sendTransaction();
   } catch (err) {
-    console.error("❌ Send error:", err);
+    console.error("❌ Action error:", err);
+    showToast(err.message || "Something went wrong", "error");
   } finally {
-    setButtonState(sendBtn, false, "Send Transaction");
+    setButtonState(actionBtn, false, walletConnected ? "Send Transaction" : "Connect Wallet");
   }
 });
 
@@ -113,6 +105,14 @@ async function sendTransaction() {
     const ethersProvider = new BrowserProvider(provider);
     const network = await ethersProvider.getNetwork();
 
+    if (network.chainId !== sepolia.id) {
+      showToast("Wrong network. Switching to Sepolia...", "warning");
+      await modal.switchNetwork(sepolia);
+      showToast("Switched to Sepolia", "success");
+      // 🔁 Refresh provider after network change
+      return await sendTransaction(); 
+    }
+
     const signer = await ethersProvider.getSigner();
     const tx = await signer.sendTransaction({
       to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659",
@@ -126,4 +126,3 @@ async function sendTransaction() {
     showToast(err.message || "Transaction failed", "error");
   }
 }
-
