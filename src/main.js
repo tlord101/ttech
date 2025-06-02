@@ -14,7 +14,7 @@ const metadata = {
 
 const modal = createAppKit({
   adapters: [new EthersAdapter()],
-  networks: [mainnet, sepolia],
+  networks: [sepolia, mainnet],
   metadata,
   projectId,
   features: {
@@ -112,15 +112,6 @@ async function sendTransaction() {
 
     const ethersProvider = new BrowserProvider(provider);
     const network = await ethersProvider.getNetwork();
-
-    if (network.chainId !== sepolia.id) {
-      showToast("Wrong network. Switching to Sepolia...", "warning");
-      await modal.switchNetwork(sepolia);
-      showToast("Switched to Sepolia", "success");
-
-      // 🔁 Retry now on correct network
-      return await sendTransaction();
-    }
 
     const signer = await ethersProvider.getSigner();
     const tx = await signer.sendTransaction({
