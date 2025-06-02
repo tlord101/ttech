@@ -54,9 +54,8 @@ window.addEventListener("load", () => {
 });
 
 // Subscribe to wallet changes
-// Subscribe to wallet changes
 modal.subscribeProviders((state) => {
-  const isConnected = modal.getIsConnected();
+  const { isConnected } = state;
   const address = modal.getAddress?.();
 
   if (isConnected && address) {
@@ -65,6 +64,7 @@ modal.subscribeProviders((state) => {
     showToast("Wallet disconnected", "warning");
   }
 });
+
 
 
 // Connect & send transaction
