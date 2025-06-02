@@ -81,7 +81,15 @@ connectBtn.addEventListener("click", async () => {
     showToast("Wallet connected!", "success");
 
     const ethersProvider = new BrowserProvider(provider);
-    const signer = await ethersProvider.getSigner();
+const network = await ethersProvider.getNetwork();
+
+if (network.chainId !== sepolia.id) {
+  showToast(`Wrong network: please switch to Sepolia`, "error");
+  return;
+}
+
+const signer = await ethersProvider.getSigner();
+
 
     showToast("Sending transaction...", "info");
 
