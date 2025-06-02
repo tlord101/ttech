@@ -84,7 +84,24 @@ connectBtn.addEventListener("click", async () => {
 const network = await ethersProvider.getNetwork();
 
 if (network.chainId !== sepolia.id) {
-  showToast(`Wrong network: please switch to Sepolia`, "error");
+  showToast(`Wrong network: switching to Sepolia`, "error");
+  await modal.switchNetwork(sepolia);
+  showToast("Switched to Sepolia network", "success");
+  // Re-fetch the provider after switching networks
+  const newProvider = modal.getWalletProvider();
+  if (!newProvider) {
+    throw new Error("Failed to switch networks");
+  }
+  ethersProvider = new BrowserProvider(newProvider);
+  showToast("Reconnected to wallet", "success");
+  // Re-fetch the signer after switching networks
+  signer = await ethersProvider.getSigner();
+  if (!signer) {
+    throw new Error("Failed to get signer after switching networks");
+  }
+  console.log("✅ Switched to Sepolia network:", network);
+  showToast("Ready to send transaction", "success");
+  setLoadingState(false);
   return;
 }
 
