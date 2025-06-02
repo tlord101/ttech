@@ -13,7 +13,7 @@ const metadata = {
 
 const modal = createAppKit({
   adapters: [new EthersAdapter()],
-  networks: [sepolia, mainnet],
+  networks: [mainnet, sepolia],
   metadata,
   projectId,
   features: {
