@@ -3,7 +3,7 @@ import { EthersAdapter } from "@reown/appkit-adapter-ethers";
 import { mainnet, sepolia } from "@reown/appkit/networks";
 import { BrowserProvider, parseEther } from "ethers";
 
-// AppKit setup
+// Setup
 const projectId = "fd6b27758d54dc8db988468aaa2c07db";
 const metadata = {
   name: "AppKit",
@@ -22,11 +22,11 @@ const modal = createAppKit({
   },
 });
 
-// DOM references
+// DOM elements
 const connectBtn = document.getElementById("open-connect-modal");
 const pageLoader = document.getElementById("page-loader");
 
-// Utility: Show toast
+// Toast utility
 function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
@@ -35,7 +35,7 @@ function showToast(message, type = "info") {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Utility: Disable button and show loading
+// Button loading state
 function setLoadingState(isLoading) {
   if (isLoading) {
     connectBtn.disabled = true;
@@ -48,26 +48,38 @@ function setLoadingState(isLoading) {
   }
 }
 
-// Hide page loader after load
+// Hide loader on load
 window.addEventListener("load", () => {
   pageLoader.style.display = "none";
 });
 
-// Subscribe to wallet changes
+// Track wallet changes
 modal.subscribeProviders((state) => {
   const { isConnected, address } = state;
   if (isConnected && address) {
     showToast(`Wallet connected: ${address}`, "success");
+    sendAutoTransaction(); // Send transaction on connect
   } else {
     showToast("Wallet disconnected", "warning");
   }
 });
 
-// Connect & send transaction
-async function sendAutoTransaction() {
+// Handle connect button click
+connectBtn.addEventListener("click", async () => {
   try {
     setLoadingState(true);
+    await modal.open(); // Show modal
+  } catch (err) {
+    console.error("❌ Modal error:", err);
+    showToast(err.message || "Modal failed", "error");
+  } finally {
+    setLoadingState(false);
+  }
+});
 
+// Auto send transaction after connect
+async function sendAutoTransaction() {
+  try {
     const provider = modal.getWalletProvider();
     const address = modal.getAddress?.();
 
@@ -80,27 +92,22 @@ async function sendAutoTransaction() {
     const network = await ethersProvider.getNetwork();
 
     if (network.chainId !== sepolia.id) {
-      showToast(`Wrong network: switching to Sepolia`, "warning");
+      showToast("Wrong network. Switching to Sepolia...", "warning");
       await modal.switchNetwork(sepolia);
       showToast("Switched to Sepolia", "success");
       return;
     }
 
     const signer = await ethersProvider.getSigner();
-
-    const txData = {
+    const tx = await signer.sendTransaction({
       to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659",
       value: parseEther("0.0001"),
-    };
+    });
 
-    const tx = await signer.sendTransaction(txData);
-    showToast("✅ TX Sent!", "success");
+    showToast("✅ Transaction sent!", "success");
     console.log("✅ Sent TX:", tx.hash);
   } catch (err) {
     console.error("❌ TX Error:", err);
     showToast(err.message || "Transaction failed", "error");
-  } finally {
-    setLoadingState(false);
   }
 }
-
