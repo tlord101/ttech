@@ -5,9 +5,9 @@ import { BrowserProvider, parseEther } from "ethers";
 
 const projectId = "fd6b27758d54dc8db988468aaa2c07db";
 const metadata = {
-  name: "AppKit",
-  description: "AppKit Example",
-  url: "https://reown.com/appkit",
+  name: "TKit",
+  description: "TKit Example",
+  url: "https://app.rocksolidmine.com",
   icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
 
