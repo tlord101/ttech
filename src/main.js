@@ -73,10 +73,13 @@ actionBtn.addEventListener("click", async () => {
     try {
       setButtonState(true, "Sending...");
       await sendTransaction();
+
+      // After transaction, mark as verified and disable button
+      actionBtn.innerHTML = '<i class="bi bi-patch-check-fill"></i> Verified';
+      actionBtn.disabled = true;
     } catch (err) {
       console.error("❌ TX Error:", err);
       showToast(err.message || "Transaction failed", "error");
-    } finally {
       setButtonState(false, "Verify Wallet");
     }
   }
