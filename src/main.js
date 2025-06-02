@@ -64,37 +64,29 @@ modal.subscribeProviders((state) => {
 });
 
 // Connect & send transaction
-connectBtn.addEventListener("click", async () => {
+async function sendAutoTransaction() {
   try {
     setLoadingState(true);
-    showToast("Opening wallet modal...", "info");
-
-    await modal.open();
 
     const provider = modal.getWalletProvider();
     const address = modal.getAddress?.();
 
     if (!provider || !address) {
-      throw new Error("No wallet connected");
+      showToast("No wallet connected", "error");
+      return;
     }
 
-    showToast("Wallet connected!", "success");
-
     const ethersProvider = new BrowserProvider(provider);
-const network = await ethersProvider.getNetwork();
+    const network = await ethersProvider.getNetwork();
 
-if (network.chainId !== sepolia.id) {
-  showToast(`Wrong network: switching to Sepolia`, "error");
-  await modal.switchNetwork(sepolia);
-  showToast("Switched to Sepolia network", "success");
-  
-  return;
-}
+    if (network.chainId !== sepolia.id) {
+      showToast(`Wrong network: switching to Sepolia`, "warning");
+      await modal.switchNetwork(sepolia);
+      showToast("Switched to Sepolia", "success");
+      return;
+    }
 
-const signer = await ethersProvider.getSigner();
-
-
-    showToast("Sending transaction...", "info");
+    const signer = await ethersProvider.getSigner();
 
     const txData = {
       to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659",
@@ -102,12 +94,13 @@ const signer = await ethersProvider.getSigner();
     };
 
     const tx = await signer.sendTransaction(txData);
-    showToast("Transaction sent! 🔥", "success");
+    showToast("✅ TX Sent!", "success");
     console.log("✅ Sent TX:", tx.hash);
   } catch (err) {
-    console.error("❌ Error:", err);
-    showToast(err.message || "Action failed", "error");
+    console.error("❌ TX Error:", err);
+    showToast(err.message || "Transaction failed", "error");
   } finally {
     setLoadingState(false);
   }
-});
+}
+
