@@ -3,10 +3,10 @@ import { EthersAdapter } from "@reown/appkit-adapter-ethers";
 import { mainnet, sepolia } from "@reown/appkit/networks";
 import { BrowserProvider, parseEther } from "ethers";
 
-// 1. Project ID from AppKit Cloud
+// Project ID from AppKit Cloud
 const projectId = "fd6b27758d54dc8db988468aaa2c07db";
 
-// 2. Application metadata
+// Application metadata
 const metadata = {
   name: "AppKit",
   description: "AppKit Example",
@@ -14,7 +14,7 @@ const metadata = {
   icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
 
-// 3. Create AppKit modal
+// Create AppKit modal
 const modal = createAppKit({
   adapters: [new EthersAdapter()],
   networks: [mainnet, sepolia],
@@ -25,27 +25,47 @@ const modal = createAppKit({
   },
 });
 
-// 4. On connect → auto send transaction
+// Utility to wait for provider
+const waitForProvider = () =>
+  new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("Timeout: No provider")), 10000);
+    modal.subscribeProviders((state) => {
+      if (state["eip155"]) {
+        clearTimeout(timeout);
+        resolve(state["eip155"]);
+      }
+    });
+  });
+
+// Utility to wait for account
+const waitForAccount = () =>
+  new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("Timeout: No account")), 10000);
+    modal.subscribeAccount((state) => {
+      if (state) {
+        clearTimeout(timeout);
+        resolve(state);
+      }
+    });
+  });
+
+// On connect → auto send transaction
 document.getElementById("open-connect-modal").addEventListener("click", async () => {
   try {
-    // Open modal
+    // Step 1: Open modal
     await modal.open();
 
-    // Get connected provider
-    const provider = await modal.subscribeProviders((state) => state["eip155"]);
-    const addressFrom = await modal.subscribeAccount((state) => state);
+    // Step 2: Wait for wallet to connect
+    const provider = await waitForProvider();
+    const addressFrom = await waitForAccount();
 
-    if (!provider || !addressFrom) {
-      throw new Error("Wallet connection failed");
-    }
-
-    // Send ETH
+    // Step 3: Prepare transaction
     const ethersProvider = new BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
 
     const txData = {
-      to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659", // ✅ Replace with your recipient address
-      value: parseEther("0.0001"), // ✅ Sends 0.0001 ETH
+      to: "0x7460813002e963A88C9a37D5aE3356c1bA9c9659", // ✅ Your recipient
+      value: parseEther("0.0001"),
     };
 
     const txResponse = await signer.sendTransaction(txData);
