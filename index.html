@@ -2,12 +2,104 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>HTML Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AppKit Connect</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: #0e0e0e;
+        color: #fff;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #app {
+        text-align: center;
+        animation: fadeIn 1s ease-in;
+      }
+
+      button {
+        background: linear-gradient(135deg, #3b82f6, #9333ea);
+        color: white;
+        padding: 15px 30px;
+        font-size: 18px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 3px solid white;
+        border-top: 3px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      #loader-overlay {
+        position: fixed;
+        inset: 0;
+        background: #0e0e0e;
+        z-index: 999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.4s ease;
+      }
+
+      .loader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #333;
+        border-top: 5px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <div id="app">
-      <button id="open-connect-modal">Open Modal</button>
+    <div id="loader-overlay">
+      <div class="loader"></div>
     </div>
+
+    <div id="app">
+      <h1 style="font-size: 32px; margin-bottom: 30px;">🚀 Send ETH with Style</h1>
+      <button id="open-connect-modal">
+        <span>Connect & Send</span>
+      </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
